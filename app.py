@@ -17,16 +17,18 @@ name_query = st.text_input("String match for Name")
 
 # Filtering options
 cols = st.columns(5)
-gender_filter = cols[0].selectbox("Gender", ['All', 'Male', 'Female'])
-siblings_spouses = cols[1].selectbox("Siblings/Spouses Aboard", ['All', 'None', '1 or more'])
-parents_children = cols[2].selectbox("Parents/Children Aboard", ['All', 'None', '1 or more'])
-survival = cols[3].multiselect("Survived", ['All', 'Alive', 'Dead'])
-p_class = cols[4].multiselect("Passenger Class", df['Pclass'].unique())
-embark = st.multiselect("Embarked", df['Embarked'].unique())
+gender_filter = cols[0].selectbox("Gender", ['All', 'Male', 'Female'], help="Select the gender of the passengers.")
+siblings_spouses = cols[1].selectbox("Siblings/Spouses Aboard", ['All', 'None', '1 or more'], help="Number of siblings or spouses aboard.")
+parents_children = cols[2].selectbox("Parents/Children Aboard", ['All', 'None', '1 or more'], help="Number of parents or children aboard.")
+survival = cols[3].multiselect("Survived", ['All', 'Alive', 'Dead'], help="Survival status of the passengers.")
+p_class = cols[4].multiselect("Passenger Class", df['Pclass'].unique(), help="Select the class of ticket purchased.")
+
+embark_options = {'S': 'Southampton', 'C': 'Cherbourg', 'Q': 'Queenstown'}
+embark = st.multiselect("Embarked", options=list(embark_options.keys()), format_func=lambda x: embark_options[x], help="Port of embarkation")
 
 range_cols = st.columns(3)
-min_fare_range, max_fare_range = range_cols[0].slider("Fare range", float(df['Fare'].min()), float(df['Fare'].max()), [float(df['Fare'].min()), float(df['Fare'].max())])
-min_age_range, max_age_range = range_cols[2].slider("Age range", float(df['Age'].min()), float(df['Age'].max()), [float(df['Age'].min()), float(df['Age'].max())])
+min_fare_range, max_fare_range = range_cols[0].slider("Fare range", float(df['Fare'].min()), float(df['Fare'].max()), [float(df['Fare'].min()), float(df['Fare'].max())], help="Range of ticket fares.")
+min_age_range, max_age_range = range_cols[2].slider("Age range", float(df['Age'].min()), float(df['Age'].max()), [float(df['Age'].min()), float(df['Age'].max())], help="Range of passenger ages.")
 
 # Filter based on the selected criteria
 filtered_df = df
