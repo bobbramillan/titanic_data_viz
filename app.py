@@ -26,31 +26,42 @@ st.title("Titanic Database Query App")
 
 name_query = st.text_input("String match for Name")
 
-cols = st.columns(4)
-survival = cols[0].multiselect("Survived", survival_options)
-p_class = cols[1].multiselect("Passenger Class", p_class_options)
-sex = cols[2].multiselect("Sex", sex_options)
-embark = cols[3].multiselect("Embarked", embark_options)
+# Filtering options
+cols = st.columns(5)
+gender_filter = cols[0].selectbox("Gender", ['All'] + list(sex_options))
+siblings_spouses = cols[1].selectbox("Siblings/Spouses", ['All', 'None', '1 or more'])
+
+# Multiselect for various filters
+survival = cols[2].multiselect("Survived", survival_options)
+p_class = cols[3].multiselect("Passenger Class", p_class_options)
+embark = cols[4].multiselect("Embarked", embark_options)
 
 range_cols = st.columns(3)
 min_fare_range, max_fare_range = range_cols[0].slider("Lowest Fare", float(min_fare), float(max_fare), [float(min_fare), float(max_fare)])
 min_age_range, max_age_range = range_cols[2].slider("Lowest Age", float(min_age), float(max_age), [float(min_age), float(max_age)])
 
-if name_query != "":
-    res = res.loc[res['Name'].str.contains(name_query, case=False, na=False)]
+# Applying filters based on user input
+if name_query:
+    res = res[res['Name'].str.contains(name_query, case=False, na=False)]
+
+if gender_filter != 'All':
+    res = res[res['Sex'] == gender_filter]
+
+if siblings_spouses == 'None':
+    res = res[res['SibSp'] == 0]
+elif siblings_spouses == '1 or more':
+    res = res[res['SibSp'] > 0]
 
 if survival:
     res = check_rows("Survived", survival)
 if p_class:
     res = check_rows("Pclass", p_class)
-if sex:
-    res = check_rows("Sex", sex)
 if embark:
     res = check_rows("Embarked", embark)
 if range_cols[0].checkbox("Use Fare Range"):
-    res = res.loc[(res['Fare'] >= min_fare_range[0]) & (res['Fare'] <= max_fare_range[1])]
+    res = res[(res['Fare'] >= min_fare_range[0]) & (res['Fare'] <= max_fare_range[1])]
 if range_cols[2].checkbox("Use Age Range"):
-    res = res.loc[(res['Age'] >= min_age_range) & (res['Age'] <= max_age_range)]
+    res = res[(res['Age'] >= min_age_range) & (res['Age'] <= max_age_range)]
 
 removal_columns = st.multiselect("Select Columns to Remove", df.columns.tolist())
 for column in removal_columns:
