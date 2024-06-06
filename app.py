@@ -2,28 +2,14 @@ import streamlit as st
 import pandas as pd
 
 # Cache our data
-@st.cache_data
+@st.cache
 def load_df():
     df = pd.read_csv("titanic.csv")
-    # Mapping the Survived numeric values to 'Dead' or 'Alive'
-    df['Survived'] = df['Survived'].map({0: 'Dead', 1: 'Alive'})
-    # Rename columns for clarity
+    df['Survived'] = df['Survived'].map({0: 'Dead', 1: 'Alive'})  # Mapping the numeric values to 'Dead' or 'Alive'
     df = df.rename(columns={'SibSp': 'Siblings/Spouses Aboard', 'Parch': 'Parents/Children Aboard'})
-    survival_options = df['Survived'].unique()
-    p_class_options = df['Pclass'].unique()
-    sex_options = df['Sex'].unique()
-    embark_options = df['Embarked'].unique()
-    min_fare = df['Fare'].min()
-    max_fare = df['Fare'].max()
-    min_age = df['Age'].min()
-    max_age = df['Age'].max()
-    return df, survival_options, p_class_options, sex_options, embark_options, min_fare, max_fare, min_age, max_age
+    return df
 
-def check_rows(column, options):
-    return res.loc[res[column].isin(options)]
-
-df, survival_options, p_class_options, sex_options, embark_options, min_fare, max_fare, min_age, max_age = load_df()
-res = df
+df = load_df()
 
 st.title("Titanic Database Query App")
 
@@ -31,48 +17,47 @@ name_query = st.text_input("String match for Name")
 
 # Filtering options
 cols = st.columns(5)
-gender_filter = cols[0].selectbox("Gender", ['All'] + list(sex_options))
+gender_filter = cols[0].selectbox("Gender", ['All', 'Male', 'Female'])
 siblings_spouses = cols[1].selectbox("Siblings/Spouses Aboard", ['All', 'None', '1 or more'])
 parents_children = cols[2].selectbox("Parents/Children Aboard", ['All', 'None', '1 or more'])
-
-# Multiselect for various filters
-survival = cols[3].multiselect("Survived", survival_options)
-p_class = cols[4].multiselect("Passenger Class", p_class_options)
+survival = cols[3].multiselect("Survived", ['All', 'Alive', 'Dead'])
+p_class = cols[4].multiselect("Passenger Class", df['Pclass'].unique())
+embark = st.multiselect("Embarked", df['Embarked'].unique())
 
 range_cols = st.columns(3)
-min_fare_range, max_fare_range = range_cols[0].slider("Lowest Fare", float(min_fare), float(max_fare), [float(min_fare), float(max_fare)])
-min_age_range, max_age_range = range_cols[2].slider("Lowest Age", float(min_age), float(max_age), [float(min_age), float(max_age)])
+min_fare_range, max_fare_range = range_cols[0].slider("Fare range", float(df['Fare'].min()), float(df['Fare'].max()), [float(df['Fare'].min()), float(df['Fare'].max())])
+min_age_range, max_age_range = range_cols[2].slider("Age range", float(df['Age'].min()), float(df['Age'].max()), [float(df['Age'].min()), float(df['Age'].max())])
 
-# Applying filters based on user input
+# Filter based on the selected criteria
+filtered_df = df
+
 if name_query:
-    res = res[res['Name'].str.contains(name_query, case=False, na=False)]
+    filtered_df = filtered_df[filtered_df['Name'].str.contains(name_query, case=False, na=False)]
 
 if gender_filter != 'All':
-    res = res[res['Sex'] == gender_filter]
+    filtered_df = filtered_df[filtered_df['Sex'] == gender_filter]
 
 if siblings_spouses == 'None':
-    res = res[res['Siblings/Spouses Aboard'] == 0]
+    filtered_df = filtered_df[filtered_df['Siblings/Spouses Aboard'] == 0]
 elif siblings_spouses == '1 or more':
-    res = res[res['Siblings/Spouses Aboard'] > 0]
+    filtered_df = filtered_df[filtered_df['Siblings/Spouses Aboard'] > 0]
 
 if parents_children == 'None':
-    res = res[res['Parents/Children Aboard'] == 0]
+    filtered_df = filtered_df[filtered_df['Parents/Children Aboard'] == 0]
 elif parents_children == '1 or more':
-    res = res[res['Parents/Children Aboard'] > 0]
+    filtered_df = filtered_df[filtered_df['Parents/Children Aboard'] > 0]
 
-if survival:
-    res = check_rows("Survived", survival)
+if 'Alive' in survival:
+    filtered_df = filtered_df[filtered_df['Survived'] == 'Alive']
+if 'Dead' in survival:
+    filtered_df = filtered_df[filtered_df['Survived'] == 'Dead']
+
 if p_class:
-    res = check_rows("Pclass", p_class)
+    filtered_df = filtered_df[filtered_df['Pclass'].isin(p_class)]
 if embark:
-    res = check_rows("Embarked", embark)
-if range_cols[0].checkbox("Use Fare Range"):
-    res = res[(res['Fare'] >= min_fare_range[0]) & (res['Fare'] <= max_fare_range[1])]
-if range_cols[2].checkbox("Use Age Range"):
-    res = res[(res['Age'] >= min_age_range) & (res['Age'] <= max_age_range)]
+    filtered_df = filtered_df[filtered_df['Embarked'].isin(embark)]
 
-removal_columns = st.multiselect("Select Columns to Remove", df.columns.tolist())
-for column in removal_columns:
-    res = res.drop(column, axis=1)
+filtered_df = filtered_df[(filtered_df['Fare'] >= min_fare_range) & (filtered_df['Fare'] <= max_fare_range)]
+filtered_df = filtered_df[(filtered_df['Age'] >= min_age_range) & (filtered_df['Age'] <= max_age_range)]
 
-st.write(res)
+st.write(filtered_df)
