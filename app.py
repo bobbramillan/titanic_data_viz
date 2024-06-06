@@ -15,12 +15,17 @@ st.title("Titanic Database Query App")
 
 name_query = st.text_input("String match for Name")
 
-# Filtering options
+# Display filtering options
 cols = st.columns(5)
 gender_filter = cols[0].selectbox("Gender", ['All', 'Male', 'Female'], help="Select the gender of the passengers.")
-siblings_spouses = cols[1].selectbox("Siblings/Spouses Aboard", ['All', 'None', '1 or more'], help="Number of siblings or spouses aboard.")
-parents_children = cols[2].selectbox("Parents/Children Aboard", ['All', 'None', '1 or more'], help="Number of parents or children aboard.")
-survival = cols[3].multiselect("Survived", ['All', 'Alive', 'Dead'], help="Survival status of the passengers.")
+
+# Confirming unique values in the 'Sex' column
+unique_sex_values = df['Sex'].unique()
+st.write("Unique values in 'Sex' column:", unique_sex_values)
+
+siblings_spouses = cols[1].selectbox("Siblings/Spouses Aboard", ['All', 'None', '1 or more'])
+parents_children = cols[2].selectbox("Parents/Children Aboard", ['All', 'None', '1 or more'])
+survival = cols[3].multiselect("Survived", ['All', 'Alive', 'Dead'])
 p_class = cols[4].multiselect("Passenger Class", df['Pclass'].unique(), help="Select the class of ticket purchased.")
 
 embark_options = {'S': 'Southampton', 'C': 'Cherbourg', 'Q': 'Queenstown'}
@@ -37,7 +42,7 @@ if name_query:
     filtered_df = filtered_df[filtered_df['Name'].str.contains(name_query, case=False, na=False)]
 
 if gender_filter != 'All':
-    filtered_df = filtered_df[filtered_df['Sex'] == gender_filter]
+    filtered_df = filtered_df[filtered_df['Sex'].str.capitalize() == gender_filter]  # Ensure capitalization matches
 
 if siblings_spouses == 'None':
     filtered_df = filtered_df[filtered_df['Siblings/Spouses Aboard'] == 0]
