@@ -5,7 +5,10 @@ import pandas as pd
 @st.cache_data
 def load_df():
     df = pd.read_csv("titanic.csv")
-    df['Survived'] = df['Survived'].map({0: 'Dead', 1: 'Alive'})  # Mapping the numeric values to 'Dead' or 'Alive'
+    # Mapping the Survived numeric values to 'Dead' or 'Alive'
+    df['Survived'] = df['Survived'].map({0: 'Dead', 1: 'Alive'})
+    # Rename columns for clarity
+    df = df.rename(columns={'SibSp': 'Siblings/Spouses Aboard', 'Parch': 'Parents/Children Aboard'})
     survival_options = df['Survived'].unique()
     p_class_options = df['Pclass'].unique()
     sex_options = df['Sex'].unique()
@@ -29,12 +32,12 @@ name_query = st.text_input("String match for Name")
 # Filtering options
 cols = st.columns(5)
 gender_filter = cols[0].selectbox("Gender", ['All'] + list(sex_options))
-siblings_spouses = cols[1].selectbox("Siblings/Spouses", ['All', 'None', '1 or more'])
+siblings_spouses = cols[1].selectbox("Siblings/Spouses Aboard", ['All', 'None', '1 or more'])
+parents_children = cols[2].selectbox("Parents/Children Aboard", ['All', 'None', '1 or more'])
 
 # Multiselect for various filters
-survival = cols[2].multiselect("Survived", survival_options)
-p_class = cols[3].multiselect("Passenger Class", p_class_options)
-embark = cols[4].multiselect("Embarked", embark_options)
+survival = cols[3].multiselect("Survived", survival_options)
+p_class = cols[4].multiselect("Passenger Class", p_class_options)
 
 range_cols = st.columns(3)
 min_fare_range, max_fare_range = range_cols[0].slider("Lowest Fare", float(min_fare), float(max_fare), [float(min_fare), float(max_fare)])
@@ -48,9 +51,14 @@ if gender_filter != 'All':
     res = res[res['Sex'] == gender_filter]
 
 if siblings_spouses == 'None':
-    res = res[res['SibSp'] == 0]
+    res = res[res['Siblings/Spouses Aboard'] == 0]
 elif siblings_spouses == '1 or more':
-    res = res[res['SibSp'] > 0]
+    res = res[res['Siblings/Spouses Aboard'] > 0]
+
+if parents_children == 'None':
+    res = res[res['Parents/Children Aboard'] == 0]
+elif parents_children == '1 or more':
+    res = res[res['Parents/Children Aboard'] > 0]
 
 if survival:
     res = check_rows("Survived", survival)
